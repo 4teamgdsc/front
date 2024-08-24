@@ -21,6 +21,7 @@ export function TargetList() {
     for (let index = 0; index < 30; index++) {
       tempList.push({
         n: Math.random() * 0.5 - 0.25,
+        c: false,
       });
     }
     setList([...tempList]);
@@ -36,11 +37,6 @@ export function TargetList() {
             restitution={0.98}
             mass={40}
             onContactForce={(payload) => {
-              console.log(
-                `The total force generated was: ${payload.totalForce}`,
-                payload.totalForce.y
-              );
-
               if (payload.totalForce.y > 10) {
                 backgroundStore.changeColor("#f5e9e9");
                 if (isFixed == false) {
@@ -57,7 +53,17 @@ export function TargetList() {
             }}
             position={new THREE.Vector3(-0.9 + item.n * 2, 1.5, -0.7 - index)}
           >
-            <Target></Target>
+            <mesh
+              visible
+              position={new THREE.Vector3(0, -0.5, 0)}
+              geometry={new THREE.BoxGeometry(0.4, 2, 0.5)}
+              castShadow={true}
+              receiveShadow={true}
+            >
+              {/* <Clone object={scene} /> */}
+
+              <meshStandardMaterial color={"#ffffff"} />
+            </mesh>
           </RigidBody>
         ))}
       </group>

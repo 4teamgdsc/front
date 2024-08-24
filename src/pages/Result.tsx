@@ -30,8 +30,8 @@ export function ResultPage() {
       <OptionTitle>두구두구.. 오뚜기님의 타율은..?</OptionTitle>
 
       <LargeBox>
-        <Item keyn={"현재"} value={"80%"} />
-        <Item keyn={"소모한 칼로리"} value={"130kcal"} />
+        <Item keyn={"현재"} value={"82%"} />
+        <Item keyn={"소모한 칼로리"} value={"3kcal"} />
         <Item keyn={"획득한 코인"} value={"20c"} />
       </LargeBox>
 

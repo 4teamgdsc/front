@@ -6,7 +6,7 @@ import { OrbitControls, Torus } from "@react-three/drei";
 import { Knife } from "../components/three/Knife";
 import * as THREE from "three";
 import io, { Socket as SocketClient } from "socket.io-client";
-import { SOCKET_IO_URL } from "../const/url";
+import { SERVER_URL, SOCKET_IO_URL } from "../const/url";
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 import { css } from "@emotion/react";
 import { EnableCamera } from "../components/ui/EnableCamera";
@@ -30,6 +30,8 @@ import { keyframes } from "@emotion/react";
 import { OptionTitle } from "../components/ui/Title";
 import { Toggle } from "../components/ui/Toggle";
 import { Logo } from "../components/ui/Logo";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const bounce = keyframes`
 0% {
@@ -49,6 +51,8 @@ const socket = io(SOCKET_IO_URL, {
 });
 
 export function Scene() {
+  const navigate = useNavigate();
+
   const [acceleration, setAcceleration] = useState({
     alpha: 0,
     beta: 0,
@@ -216,11 +220,10 @@ export function Scene() {
     setIsStart(true);
     renderLoop();
     setCameraAsp(window.innerWidth / window.innerHeight);
+    document.documentElement.requestFullscreen();
   };
 
-  useEffect(() => {
-    console.log("AD", topCameraPosition.z);
-  }, [topCameraPosition]);
+  useEffect(() => {}, [topCameraPosition]);
 
   const initCam = async () => {
     const filesetResolver = await FilesetResolver.forVisionTasks(
@@ -289,6 +292,15 @@ export function Scene() {
     setPeer();
     initCam();
     setCameraAsp(window.innerWidth / window.innerHeight);
+
+    axios
+      .post(`${SERVER_URL}/api/user`)
+      .then(function (response) {
+        console.log(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }, []);
 
   useEffect(() => {
@@ -308,6 +320,12 @@ export function Scene() {
       );
     } catch (error) {}
   }, [acceleration]);
+
+  useEffect(() => {
+    if (Math.abs(position.z) > 31) {
+      navigate("/result");
+    }
+  }, [position]);
 
   //   useEffect(() => {
   //     if (backgroundStore.color != "#ffffff") {
@@ -439,7 +457,27 @@ export function Scene() {
               penumbra={1}
               decay={0}
               intensity={Math.PI}
+              color={"#afedb8"}
             />
+
+            <spotLight
+              position={[10, 20, 20]}
+              angle={0.15}
+              penumbra={1}
+              decay={0}
+              intensity={2}
+              color={"#afd0ed"}
+            />
+
+            <spotLight
+              position={[10, 20, 30]}
+              angle={0.15}
+              penumbra={1}
+              decay={0}
+              intensity={2}
+              color={"#d3a2e8"}
+            />
+
             <TargetList />
 
             <Floor />

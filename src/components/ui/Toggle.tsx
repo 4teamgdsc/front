@@ -57,7 +57,7 @@ export function Toggle({
           height: "1rem",
           borderRadius: "2rem",
           backgroundColor: checked ? "#88FC01" : "#dedee3",
-          transition: "0.5s",
+          transition: "1s",
         })}
       >
         <div
