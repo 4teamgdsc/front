@@ -3,6 +3,8 @@ import React, { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Floor } from "../components/three/Floor";
 import { OrbitControls } from "@react-three/drei";
+import { Knife } from "../components/three/Knife";
+import * as THREE from "three";
 
 function Box(props) {
   // This reference will give us direct access to the mesh
@@ -55,6 +57,11 @@ export function Scene() {
         intensity={Math.PI}
       />
       <Floor />
+
+      <Knife
+        position={new THREE.Vector3(0, 1, 0)}
+        rotation={new THREE.Euler(0.2, 0, 0)}
+      />
     </Canvas>
   );
 }
