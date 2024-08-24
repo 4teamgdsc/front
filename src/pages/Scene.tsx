@@ -28,6 +28,7 @@ import { useBackgroundStore } from "../store/backgroundColor";
 
 import { keyframes } from "@emotion/react";
 import { OptionTitle } from "../components/ui/Title";
+import { Toggle } from "../components/ui/Toggle";
 
 const bounce = keyframes`
 0% {
@@ -57,6 +58,7 @@ export function Scene() {
 
   const [userId, setUserId] = useState(Math.random());
   const [otherUserId, setOtherUserId] = useState(0);
+  const [isStart, setIsStart] = useState(false);
 
   const [rotation, setRotation] = useState(new THREE.Euler(0, 0, 0));
   const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
@@ -162,6 +164,10 @@ export function Scene() {
 
   const handleResetUser = () => {
     socket.emit("reset");
+  };
+
+  const handleClickToggle = () => {
+    startNewCamera();
   };
 
   const startNewCamera = () => {
@@ -308,7 +314,7 @@ export function Scene() {
         id="sound"
       ></audio>
 
-      {isCameraOpen == false && (
+      {isStart == false && (
         <EnableCamera>
           <div
             css={css({
@@ -325,7 +331,9 @@ export function Scene() {
             </Box>
 
             <Box>
-              <button onClick={startNewCamera}>카메라</button>
+              <Toggle checked={isCameraOpen} onClick={startNewCamera}>
+                PC캠 활성화하기
+              </Toggle>
 
               <OptionTitle>카메라 권한을 활성화해 주세요.</OptionTitle>
             </Box>
@@ -343,7 +351,7 @@ export function Scene() {
               marginTop: "3rem",
             })}
           >
-            <Button>준비완료</Button>
+            <Button onClick={() => setIsStart(true)}>준비완료</Button>
           </div>
         </EnableCamera>
       )}
