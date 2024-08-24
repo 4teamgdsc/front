@@ -7,35 +7,13 @@ import { Knife } from "../components/three/Knife";
 import * as THREE from "three";
 import io, { Socket as SocketClient } from "socket.io-client";
 import { SOCKET_IO_URL } from "../const/url";
+import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+import { css } from "@emotion/react";
 
 const socket = io(SOCKET_IO_URL, {
   query: { token: "a" },
   secure: true,
 });
-
-function Box(props) {
-  // This reference will give us direct access to the mesh
-  const meshRef: any = useRef();
-  // Set up state for the hovered and active state
-  const [hovered, setHover] = useState(false);
-  const [active, setActive] = useState(false);
-  // Subscribe this component to the render-loop, rotate the mesh every frame
-  useFrame((state, delta) => (meshRef.current.rotation.x += delta));
-  // Return view, these are regular three.js elements expressed in JSX
-  return (
-    <mesh
-      {...props}
-      ref={meshRef}
-      scale={active ? 1.5 : 1}
-      onClick={(event) => setActive(!active)}
-      onPointerOver={(event) => setHover(true)}
-      onPointerOut={(event) => setHover(false)}
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? "hotpink" : "orange"} />
-    </mesh>
-  );
-}
 
 export function Scene() {
   const [acceleration, setAcceleration] = useState({
@@ -44,7 +22,15 @@ export function Scene() {
     gamma: 0,
   });
 
+  const [handLandmarker, setHandLandmarker] = useState<any>();
+
   const [rotation, setRotation] = useState(new THREE.Euler(0, 0, 0));
+  const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
+
+  const [lastVideoTime, setLastVideoTime] = useState(-1);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  const cameraRef: any = useRef();
 
   const knifeRef: any = useRef();
   const setPeer = () => {
@@ -74,7 +60,6 @@ export function Scene() {
         socket.emit("newIceCandidate", e.candidate);
       };
 
-      //this.peerConnection.ontrack = e => remoteVideo.srcObject = e.streams[0];
       peerConnection.setRemoteDescription(new RTCSessionDescription(message));
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
@@ -90,61 +75,152 @@ export function Scene() {
     });
   };
 
+  const startNewCamera = () => {
+    const videoElement: HTMLVideoElement = document.getElementById(
+      "inputVideo"
+    ) as HTMLVideoElement;
+
+    const width = 720;
+    const height = 480;
+
+    const constraints = {
+      video: {
+        width: width,
+        height: height,
+      },
+    };
+
+    if (lastVideoTime != -1) {
+      videoElement.play();
+      return false;
+    }
+
+    setIsCameraOpen(true);
+
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      if (lastVideoTime != -1) {
+        cameraRef.current.srcObject = stream;
+        cameraRef.current.play();
+      } else {
+        cameraRef.current.srcObject = stream;
+        cameraRef.current.play();
+
+        cameraRef.current.addEventListener("loadeddata", renderLoop);
+      }
+    });
+  };
+
+  const initCam = async () => {
+    const filesetResolver = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
+    );
+    const handLandmarkerTemp = await HandLandmarker.createFromOptions(
+      filesetResolver,
+      {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+          delegate: "GPU",
+        },
+        runningMode: "VIDEO",
+        numHands: 1,
+        minTrackingConfidence: 0.2,
+      }
+    );
+
+    setHandLandmarker(handLandmarkerTemp);
+  };
+
+  const renderLoop = () => {
+    window.requestAnimationFrame(renderLoop);
+
+    const video: any = document.getElementById("video");
+    let startTimeMs = performance.now();
+
+    if (video.currentTime !== lastVideoTime) {
+      try {
+        const detections = handLandmarker.detectForVideo(video, startTimeMs);
+        const x = detections.landmarks[0][0].x;
+        const y = detections.landmarks[0][0].y;
+        const z = detections.landmarks[0][0].z;
+
+        setPosition(new THREE.Vector3(-x * 2, 2 + (-y - 0.5), z));
+      } catch (error) {}
+    }
+  };
+
   useEffect(() => {
     setPeer();
-    socket.emit("test", "d");
+    initCam();
   }, []);
 
   useEffect(() => {
     try {
-      console.log((acceleration.alpha * Math.PI) / 180);
-
       setRotation(
         new THREE.Euler(
-          acceleration.gamma,
-          acceleration.alpha,
-          acceleration.alpha
+          acceleration.beta + Math.PI / 2,
+          -acceleration.gamma,
+          -acceleration.alpha
         )
       );
-
-      //   knifeRef.current.rotation.x = acceleration.alpha;
-      //   knifeRef.current.rotation.y = acceleration.beta;
-      //   knifeRef.current.rotation.z = acceleration.gamma;
     } catch (error) {}
   }, [acceleration]);
 
   return (
-    <Canvas>
-      <OrbitControls makeDefault />
+    <>
+      <video
+        id="video"
+        ref={cameraRef}
+        width={720}
+        height={480}
+        css={css({
+          position: "absolute",
+          top: 0,
+          left: 0,
+        })}
+      ></video>
+      {isCameraOpen == false && (
+        <button
+          onClick={startNewCamera}
+          css={css({
+            position: "absolute",
+            top: 0,
+            left: 0,
+            zIndex: 1000,
+          })}
+        >
+          카메라
+        </button>
+      )}
 
-      <directionalLight
-        castShadow
-        position={[0, 10, 0]}
-        intensity={4}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-far={50}
-        shadow-camera-left={-100}
-        shadow-camera-right={100}
-        shadow-camera-top={100}
-        shadow-camera-bottom={-100}
-      />
+      <Canvas>
+        <OrbitControls makeDefault />
+        <color attach="background" args={["#ffffff"]} />
 
-      <ambientLight intensity={Math.PI / 2} />
-      <spotLight
-        position={[10, 10, 10]}
-        angle={0.15}
-        penumbra={1}
-        decay={0}
-        intensity={Math.PI}
-      />
-      <Floor />
+        <directionalLight
+          castShadow
+          position={[0, 10, 0]}
+          intensity={4}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+          shadow-camera-far={50}
+          shadow-camera-left={-100}
+          shadow-camera-right={100}
+          shadow-camera-top={100}
+          shadow-camera-bottom={-100}
+        />
 
-      <Knife
-        ref={knifeRef}
-        position={new THREE.Vector3(0, 1, 0)}
-        rotation={rotation}
-      />
-    </Canvas>
+        <ambientLight intensity={Math.PI / 2} />
+        <spotLight
+          position={[10, 10, 10]}
+          angle={0.15}
+          penumbra={1}
+          decay={0}
+          intensity={Math.PI}
+        />
+        <Floor />
+
+        <Knife ref={knifeRef} position={position} rotation={rotation} />
+      </Canvas>
+    </>
   );
 }

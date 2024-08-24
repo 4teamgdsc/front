@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/css": "^11.13.0",
     "@emotion/react": "^11.13.3",
+    "@mediapipe/tasks-vision": "^0.10.14",
     "@react-three/drei": "^9.111.3",
     "@react-three/fiber": "^8.17.5",
     "@types/three": "^0.167.2",
