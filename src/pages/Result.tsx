@@ -3,6 +3,7 @@ import { OptionTitle } from "../components/ui/Title";
 import { LargeBox } from "../components/ui/Box";
 import { Button } from "../components/ui/Button";
 import { useNavigate } from "react-router-dom";
+import { Logo } from "../components/ui/Logo";
 
 export function ResultPage() {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ export function ResultPage() {
         gap: "2rem",
       })}
     >
+      <Logo />
+
       <OptionTitle>두구두구.. 오뚜기님의 타율은..?</OptionTitle>
 
       <LargeBox>

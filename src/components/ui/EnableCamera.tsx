@@ -1,6 +1,6 @@
 import { css } from "@emotion/react";
 
-export function EnableCamera({ children }: any) {
+export function EnableCamera({ children, isOpen }: any) {
   return (
     <div
       css={css({
@@ -11,7 +11,9 @@ export function EnableCamera({ children }: any) {
         alignItems: "center",
         display: "flex",
         flexDirection: "column",
-
+        opacity: isOpen ? "100%" : "0",
+        visibility: isOpen ? "visible" : "hidden",
+        transition: ".5s",
         backgroundColor: "#242424",
         zIndex: 10000,
       })}

@@ -4,6 +4,7 @@ export function Box({ children }: any) {
   return (
     <div
       css={css({
+        position: "relative",
         padding: "1rem",
         borderRadius: "2rem",
         justifyContent: "space-around",

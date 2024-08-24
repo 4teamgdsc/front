@@ -4,6 +4,7 @@ import { SOCKET_IO_URL } from "../const/url";
 import { css } from "@emotion/react";
 import { Button } from "../components/ui/Button";
 import { OptionTitle } from "../components/ui/Title";
+import { Logo } from "../components/ui/Logo";
 
 const socket = io(SOCKET_IO_URL, {
   query: { token: "a" },
@@ -117,6 +118,8 @@ export function Mobile() {
         backgroundColor: "#242424",
       })}
     >
+      <Logo />
+
       {isGranted == false ? (
         <>
           <OptionTitle>모션인식 권한을 허용해주세요</OptionTitle>

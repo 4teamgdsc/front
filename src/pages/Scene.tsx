@@ -29,6 +29,7 @@ import { useBackgroundStore } from "../store/backgroundColor";
 import { keyframes } from "@emotion/react";
 import { OptionTitle } from "../components/ui/Title";
 import { Toggle } from "../components/ui/Toggle";
+import { Logo } from "../components/ui/Logo";
 
 const bounce = keyframes`
 0% {
@@ -75,6 +76,10 @@ export function Scene() {
   const [otherRotation, setOtherRotation] = useState(new THREE.Euler(0, 0, 0));
   const [otherPosition, setOtherPosition] = useState(
     new THREE.Vector3(0, 1, 2)
+  );
+
+  const [cameraAsp, setCameraAsp] = useState(
+    window.innerWidth / window.innerHeight
   );
 
   const rigidBody = useRef<RapierRigidBody>(null);
@@ -210,6 +215,7 @@ export function Scene() {
   const handleStart = () => {
     setIsStart(true);
     renderLoop();
+    setCameraAsp(window.innerWidth / window.innerHeight);
   };
 
   useEffect(() => {
@@ -282,6 +288,7 @@ export function Scene() {
   useEffect(() => {
     setPeer();
     initCam();
+    setCameraAsp(window.innerWidth / window.innerHeight);
   }, []);
 
   useEffect(() => {
@@ -332,47 +339,58 @@ export function Scene() {
         id="sound"
       ></audio>
 
-      {isStart == false && (
-        <EnableCamera>
-          <div
-            css={css({
-              display: "flex",
-              flexDirection: "row",
-              gap: "1.5rem",
-            })}
-          >
-            <Box>
-              <QRCodeBox
-                text={`https://front:5173/mobile?id=${userId}`}
-              ></QRCodeBox>
-              <OptionTitle>핸드폰으로 QR코드를 인식해주세요</OptionTitle>
-            </Box>
+      <EnableCamera isOpen={!isStart}>
+        <div
+          css={css({
+            display: "flex",
+            flexDirection: "row",
+            gap: "1.5rem",
+          })}
+        >
+          <Box>
+            <DotLabel>1</DotLabel>
+            <QRCodeBox
+              text={`https://front:5173/mobile?id=${userId}`}
+            ></QRCodeBox>
+            <OptionTitle>핸드폰으로 QR코드를 인식해주세요</OptionTitle>
+          </Box>
 
-            <Box>
+          <Box>
+            <DotLabel>2</DotLabel>
+
+            <div
+              css={css({
+                marginTop: "2rem",
+              })}
+            >
               <Toggle checked={isCameraOpen} onClick={startNewCamera}>
                 PC캠 활성화하기
               </Toggle>
+            </div>
 
-              <OptionTitle>카메라 권한을 활성화해 주세요.</OptionTitle>
-            </Box>
+            <OptionTitle>카메라 권한을 활성화해 주세요.</OptionTitle>
+          </Box>
 
-            <Box>
-              <img src="/image/notebook.png" width={64} height={64}></img>
-              <OptionTitle>
-                핸드폰 화면이 정면을 보도록 위치시켜주세요
-              </OptionTitle>
-            </Box>
-          </div>
+          <Box>
+            <DotLabel>3</DotLabel>
 
-          <div
-            css={css({
-              marginTop: "3rem",
-            })}
-          >
-            <Button onClick={handleStart}>준비완료</Button>
-          </div>
-        </EnableCamera>
-      )}
+            <img src="/image/notebook.png" width={64} height={64}></img>
+            <OptionTitle>
+              핸드폰 화면이 정면을 보도록 위치시켜주세요
+            </OptionTitle>
+          </Box>
+        </div>
+
+        <div
+          css={css({
+            marginTop: "3rem",
+          })}
+        >
+          <Button onClick={handleStart}>준비완료</Button>
+        </div>
+      </EnableCamera>
+
+      <Logo />
 
       <button
         css={css({
@@ -388,7 +406,12 @@ export function Scene() {
 
       <Canvas>
         <color attach="background" args={[backgroundStore.color]} />
-        <Camera position={cameraPosition} />
+        <Camera
+          position={cameraPosition}
+          fov={45}
+          aspect={cameraAsp}
+          near={0.1}
+        />
 
         {/* <OrbitControls /> */}
 
@@ -452,4 +475,32 @@ const Camera = (props) => {
   useEffect(() => void set({ camera: ref.current }), []);
   useFrame(() => ref.current.updateMatrixWorld());
   return <perspectiveCamera ref={ref} {...props} />;
+};
+
+const DotLabel = ({ children }: any) => {
+  return (
+    <div
+      css={css({
+        position: "absolute",
+        top: "1rem",
+        left: "1rem",
+        backgroundColor: "#F7F7F720",
+        borderRadius: "40px",
+        width: "26px",
+        height: "26px",
+        alignItems: "center",
+        display: "flex",
+        justifyContent: "center",
+      })}
+    >
+      <b
+        css={css({
+          fontWeight: "400",
+          color: "#C1C1C1",
+        })}
+      >
+        {children}
+      </b>
+    </div>
+  );
 };
