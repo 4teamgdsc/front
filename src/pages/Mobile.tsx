@@ -24,8 +24,6 @@ export function Mobile() {
     const connectDataChannel = peerConnection.createDataChannel("data");
     setDataChannel(connectDataChannel);
 
-    // dataChannel.send("message from space!!!!!!!!!!!!!!!!!!!!!!!!!");
-
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 

@@ -9,6 +9,8 @@ import io, { Socket as SocketClient } from "socket.io-client";
 import { SOCKET_IO_URL } from "../const/url";
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 import { css } from "@emotion/react";
+import { EnableCamera } from "../components/ui/EnableCamera";
+import { QRCodeBox } from "../components/ui/QRCode";
 
 const socket = io(SOCKET_IO_URL, {
   query: { token: "a" },
@@ -24,8 +26,16 @@ export function Scene() {
 
   const [handLandmarker, setHandLandmarker] = useState<any>();
 
+  const [userId, setUserId] = useState(Math.random());
+  const [otherUserId, setOtherUserId] = useState(0);
+
   const [rotation, setRotation] = useState(new THREE.Euler(0, 0, 0));
   const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
+
+  const [otherRotation, setOtherRotation] = useState(new THREE.Euler(0, 0, 0));
+  const [otherPosition, setOtherPosition] = useState(
+    new THREE.Vector3(0, 1, 2)
+  );
 
   const [lastVideoTime, setLastVideoTime] = useState(-1);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -35,6 +45,8 @@ export function Scene() {
   const knifeRef: any = useRef();
   const setPeer = () => {
     let peerConnection: RTCPeerConnection;
+
+    socket.emit("addUser", userId);
 
     socket.on("messageoffer", async (message) => {
       const configuration = {
@@ -73,6 +85,33 @@ export function Scene() {
         console.error("Error adding received ice candidate", e);
       }
     });
+
+    socket.on("nowUsers", async (userList) => {
+      console.log(userList);
+      for (let index = 0; index < userList.length; index++) {
+        const targetId = userList[index];
+        if (targetId != userId) {
+          setOtherUserId(targetId);
+        }
+      }
+    });
+
+    socket.on("rcvData", async (targetId, targetPosition) => {
+      if (targetId != userId) {
+        setOtherPosition(
+          new THREE.Vector3(
+            targetPosition[0],
+            targetPosition[1],
+            targetPosition[2]
+          )
+        );
+        console.log(targetId, targetPosition);
+      }
+    });
+  };
+
+  const handleResetUser = () => {
+    socket.emit("reset");
   };
 
   const startNewCamera = () => {
@@ -143,7 +182,13 @@ export function Scene() {
         const y = detections.landmarks[0][0].y;
         const z = detections.landmarks[0][0].z;
 
-        setPosition(new THREE.Vector3(-x * 2, 2 + (-y - 0.5), z));
+        const fx = -x * 2;
+        const fy = 2 + (-y - 0.5);
+        const fz = z;
+
+        socket.emit("data", userId, [fx, fy, fz]);
+
+        setPosition(new THREE.Vector3(fx, fy, fz));
       } catch (error) {}
     }
   };
@@ -179,18 +224,26 @@ export function Scene() {
         })}
       ></video>
       {isCameraOpen == false && (
-        <button
-          onClick={startNewCamera}
-          css={css({
-            position: "absolute",
-            top: 0,
-            left: 0,
-            zIndex: 1000,
-          })}
-        >
-          카메라
-        </button>
+        <EnableCamera>
+          <QRCodeBox
+            text={`https://front:5173/mobile?id=${userId}`}
+          ></QRCodeBox>
+
+          <button onClick={startNewCamera}>카메라</button>
+        </EnableCamera>
       )}
+
+      <button
+        css={css({
+          position: "absolute",
+          top: 0,
+          right: 0,
+          zIndex: 9000,
+        })}
+        onClick={handleResetUser}
+      >
+        reset
+      </button>
 
       <Canvas>
         <OrbitControls makeDefault />
@@ -218,6 +271,14 @@ export function Scene() {
           intensity={Math.PI}
         />
         <Floor />
+
+        {otherUserId != 0 && (
+          <Knife
+            ref={knifeRef}
+            position={otherPosition}
+            rotation={otherRotation}
+          />
+        )}
 
         <Knife ref={knifeRef} position={position} rotation={rotation} />
       </Canvas>
