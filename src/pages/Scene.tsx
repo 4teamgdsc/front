@@ -66,6 +66,10 @@ export function Scene() {
     new THREE.Vector3(0, 1, 1)
   );
 
+  const [topCameraPosition, setTopCameraPosition] = useState(
+    new THREE.Vector3(0, 0, 1)
+  );
+
   const [playerPosition, setPlayerPosition] = useState(0);
 
   const [otherRotation, setOtherRotation] = useState(new THREE.Euler(0, 0, 0));
@@ -199,11 +203,18 @@ export function Scene() {
       } else {
         cameraRef.current.srcObject = stream;
         cameraRef.current.play();
-
-        cameraRef.current.addEventListener("loadeddata", renderLoop);
       }
     });
   };
+
+  const handleStart = () => {
+    setIsStart(true);
+    renderLoop();
+  };
+
+  useEffect(() => {
+    console.log("AD", topCameraPosition.z);
+  }, [topCameraPosition]);
 
   const initCam = async () => {
     const filesetResolver = await FilesetResolver.forVisionTasks(
@@ -228,6 +239,8 @@ export function Scene() {
   const renderLoop = () => {
     window.requestAnimationFrame(renderLoop);
 
+    const speed = 0.005;
+
     const video: any = document.getElementById("video");
     let startTimeMs = performance.now();
 
@@ -240,13 +253,18 @@ export function Scene() {
 
         const fx = -x * 2;
         const fy = 2 + (-y - 0.5);
-        const fz = z - startTimeMs / 2000;
+        const fz = z;
 
         socket.emit("data", userId, [fx, fy, fz]);
 
-        setPosition(new THREE.Vector3(fx, fy, fz));
+        setPosition((e) => new THREE.Vector3(fx, fy, e.z - speed));
         setCameraPosition(
-          new THREE.Vector3(fx - (0.2 + fx / 6), fy + (0.2 + fy / 10), fz + 1)
+          (e) =>
+            new THREE.Vector3(
+              fx - (0.2 + fx / 6),
+              fy + (0.2 + fy / 10),
+              e.z - speed
+            )
         );
 
         // const position = vec3({
@@ -351,7 +369,7 @@ export function Scene() {
               marginTop: "3rem",
             })}
           >
-            <Button onClick={() => setIsStart(true)}>준비완료</Button>
+            <Button onClick={handleStart}>준비완료</Button>
           </div>
         </EnableCamera>
       )}

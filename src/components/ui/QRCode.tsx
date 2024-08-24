@@ -12,7 +12,17 @@ function QRCodeBox({ text }: any) {
     });
   }, [text]);
 
-  return <canvas ref={canvasRef}></canvas>;
+  return (
+    <canvas
+      css={css({
+        borderRadius: "16px",
+        width: "120px !important",
+        height: "120px !important",
+        marginTop: "1rem",
+      })}
+      ref={canvasRef}
+    ></canvas>
+  );
 }
 
 export { QRCodeBox };

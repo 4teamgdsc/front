@@ -6,7 +6,7 @@ export function Box({ children }: any) {
       css={css({
         padding: "1rem",
         borderRadius: "2rem",
-        justifyContent: "center",
+        justifyContent: "space-around",
         display: "flex",
         backgroundColor: "#F7F7F729",
         flexDirection: "column",
