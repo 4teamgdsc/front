@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import io, { Socket as SocketClient } from "socket.io-client";
 import { SOCKET_IO_URL } from "../const/url";
+import { css } from "@emotion/react";
+import { Button } from "../components/ui/Button";
+import { OptionTitle } from "../components/ui/Title";
 
 const socket = io(SOCKET_IO_URL, {
   query: { token: "a" },
@@ -56,6 +59,7 @@ export function Mobile() {
   };
 
   const handleOrientation = (event) => {
+    setIsGranted(true);
     setAcceleration({
       alpha: event.alpha,
       beta: event.beta,
@@ -101,11 +105,30 @@ export function Mobile() {
   }, []);
 
   return (
-    <div>
-      <button onClick={handleClickGrant}>grant</button>
-      <p>{Math.round(acceleration.alpha)}</p>
+    <div
+      css={css({
+        width: "100%",
+        height: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+        display: "flex",
+        flexDirection: "column",
+
+        backgroundColor: "#242424",
+      })}
+    >
+      {isGranted == false ? (
+        <>
+          <OptionTitle>모션인식 권한을 허용해주세요</OptionTitle>
+          <Button onClick={handleClickGrant}>허용하기</Button>
+        </>
+      ) : (
+        <OptionTitle>허용되었어요</OptionTitle>
+      )}
+
+      {/* <p>{Math.round(acceleration.alpha)}</p>
       <p>{Math.round(acceleration.beta)}</p>
-      <p>{Math.round(acceleration.gamma)}</p>
+      <p>{Math.round(acceleration.gamma)}</p> */}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 import { Scene } from "./pages/Scene.tsx";
 import { Mobile } from "./pages/Mobile.tsx";
+import { ResultPage } from "./pages/Result.tsx";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "mobile",
     element: <Mobile />,
+  },
+  {
+    path: "result",
+    element: <ResultPage />,
   },
 ]);
 

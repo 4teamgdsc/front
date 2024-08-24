@@ -24,6 +24,22 @@ import {
   vec3,
 } from "@react-three/rapier";
 import { TargetList } from "../components/three/TargetList";
+import { useBackgroundStore } from "../store/backgroundColor";
+
+import { keyframes } from "@emotion/react";
+import { OptionTitle } from "../components/ui/Title";
+
+const bounce = keyframes`
+0% {
+background-color: #ffffff;
+}
+50% {
+background-color: #cf2929;
+}
+100% {
+background-color: #ffffff;
+}
+`;
 
 const socket = io(SOCKET_IO_URL, {
   query: { token: "a" },
@@ -59,6 +75,8 @@ export function Scene() {
 
   const [lastVideoTime, setLastVideoTime] = useState(-1);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  const backgroundStore = useBackgroundStore();
 
   const cameraRef: any = useRef();
 
@@ -260,6 +278,13 @@ export function Scene() {
     } catch (error) {}
   }, [acceleration]);
 
+  //   useEffect(() => {
+  //     if (backgroundStore.color != "#ffffff") {
+  //       const audioElement: any = document.getElementById("sound");
+  //       audioElement.play();
+  //     }
+  //   }, [backgroundStore.color]);
+
   return (
     <>
       <video
@@ -273,6 +298,16 @@ export function Scene() {
           left: 0,
         })}
       ></video>
+      <audio
+        css={css({
+          position: "absolute",
+          top: 0,
+          left: 0,
+        })}
+        src="/sound/target.mp3"
+        id="sound"
+      ></audio>
+
       {isCameraOpen == false && (
         <EnableCamera>
           <div
@@ -290,11 +325,13 @@ export function Scene() {
             </Box>
 
             <Box>
-              <OptionTitle>카메라 권한을 활성화해 주세요.</OptionTitle>
               <button onClick={startNewCamera}>카메라</button>
+
+              <OptionTitle>카메라 권한을 활성화해 주세요.</OptionTitle>
             </Box>
 
             <Box>
+              <img src="/image/notebook.png" width={64} height={64}></img>
               <OptionTitle>
                 핸드폰 화면이 정면을 보도록 위치시켜주세요
               </OptionTitle>
@@ -324,13 +361,13 @@ export function Scene() {
       </button>
 
       <Canvas>
-        <color attach="background" args={["#ffffff"]} />
+        <color attach="background" args={[backgroundStore.color]} />
         <Camera position={cameraPosition} />
 
         {/* <OrbitControls /> */}
 
         <Suspense>
-          <Physics debug>
+          <Physics>
             <CuboidCollider position={[0, -1, 0]} args={[20, 1, 60]} />
 
             <directionalLight
@@ -389,17 +426,4 @@ const Camera = (props) => {
   useEffect(() => void set({ camera: ref.current }), []);
   useFrame(() => ref.current.updateMatrixWorld());
   return <perspectiveCamera ref={ref} {...props} />;
-};
-
-const OptionTitle = ({ children }: any) => {
-  return (
-    <p
-      css={css({
-        color: "#fff",
-        textAlign: "center",
-      })}
-    >
-      {children}
-    </p>
-  );
 };

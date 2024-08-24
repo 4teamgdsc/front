@@ -6,16 +6,19 @@ import { useFrame } from "@react-three/fiber";
 import { useLoader } from "@react-three/fiber";
 import { GLTF, GLTFLoader } from "three-stdlib";
 import { Clone } from "@react-three/drei";
+import { useBackgroundStore } from "../../store/backgroundColor";
 
 export function TargetList() {
   const [list, setList] = useState([]);
   //   const { scene } = useLoader(GLTFLoader, "/model/model.glb");
   //   const copiedScene = useMemo(() => scene.clone(), [scene]);
+  const backgroundStore = useBackgroundStore();
+  const [isFixed, setIsFixed] = useState(false);
 
   useEffect(() => {
     let tempList = [];
 
-    for (let index = 0; index < 10; index++) {
+    for (let index = 0; index < 30; index++) {
       tempList.push({
         n: Math.random() * 0.5 - 0.25,
       });
@@ -35,8 +38,22 @@ export function TargetList() {
             onContactForce={(payload) => {
               console.log(
                 `The total force generated was: ${payload.totalForce}`,
-                payload.totalForce
+                payload.totalForce.y
               );
+
+              if (payload.totalForce.y > 10) {
+                backgroundStore.changeColor("#f5e9e9");
+                if (isFixed == false) {
+                  setTimeout(() => {
+                    setIsFixed(false);
+                  }, 800);
+                }
+                setIsFixed(true);
+              } else {
+                if (isFixed == false) {
+                  backgroundStore.changeColor("#ffffff");
+                }
+              }
             }}
             position={new THREE.Vector3(-0.9 + item.n * 2, 1.5, -0.7 - index)}
           >
