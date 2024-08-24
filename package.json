@@ -12,8 +12,13 @@
   "dependencies": {
     "@emotion/css": "^11.13.0",
     "@emotion/react": "^11.13.3",
+    "@react-three/drei": "^9.111.3",
+    "@react-three/fiber": "^8.17.5",
+    "@types/three": "^0.167.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.1",
+    "three": "^0.167.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
@@ -26,6 +31,7 @@
     "globals": "^15.9.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vite-plugin-mkcert": "^1.17.6"
   }
 }
