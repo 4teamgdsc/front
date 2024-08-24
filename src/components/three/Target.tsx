@@ -1,6 +1,7 @@
+import { Clone } from "@react-three/drei";
 import * as THREE from "three";
 
-export function Target() {
+export function Target({ scene }: any) {
   return (
     <mesh
       visible
@@ -9,6 +10,8 @@ export function Target() {
       castShadow={true}
       receiveShadow={true}
     >
+      {/* <Clone object={scene} /> */}
+
       <meshStandardMaterial color={"#ffffff"} />
     </mesh>
   );

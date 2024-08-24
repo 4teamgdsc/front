@@ -48,6 +48,8 @@ export function Scene() {
     new THREE.Vector3(0, 1, 1)
   );
 
+  const [playerPosition, setPlayerPosition] = useState(0);
+
   const [otherRotation, setOtherRotation] = useState(new THREE.Euler(0, 0, 0));
   const [otherPosition, setOtherPosition] = useState(
     new THREE.Vector3(0, 1, 2)
@@ -214,7 +216,7 @@ export function Scene() {
 
         const fx = -x * 2;
         const fy = 2 + (-y - 0.5);
-        const fz = z;
+        const fz = z - startTimeMs / 2000;
 
         socket.emit("data", userId, [fx, fy, fz]);
 
@@ -323,13 +325,13 @@ export function Scene() {
 
       <Canvas>
         <color attach="background" args={["#ffffff"]} />
-        {/* <Camera position={cameraPosition} /> */}
+        <Camera position={cameraPosition} />
 
-        <OrbitControls />
+        {/* <OrbitControls /> */}
 
         <Suspense>
           <Physics debug>
-            <CuboidCollider position={[0, -1, 0]} args={[20, 1, 20]} />
+            <CuboidCollider position={[0, -1, 0]} args={[20, 1, 60]} />
 
             <directionalLight
               castShadow
