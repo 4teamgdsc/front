@@ -103,6 +103,9 @@ export function Mobile() {
   return (
     <div>
       <button onClick={handleClickGrant}>grant</button>
+      <p>{Math.round(acceleration.alpha)}</p>
+      <p>{Math.round(acceleration.beta)}</p>
+      <p>{Math.round(acceleration.gamma)}</p>
     </div>
   );
 }

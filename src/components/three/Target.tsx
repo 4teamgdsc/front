@@ -1,12 +1,11 @@
 import * as THREE from "three";
 
-export function Floor() {
+export function Target() {
   return (
     <mesh
       visible
-      position={new THREE.Vector3(0, -1, 0)}
-      rotation={new THREE.Euler(0, 0, 0)}
-      geometry={new THREE.BoxGeometry(4, 0.2, 4)}
+      position={new THREE.Vector3(0, -0.5, 0)}
+      geometry={new THREE.BoxGeometry(0.4, 2, 0.5)}
       castShadow={true}
       receiveShadow={true}
     >

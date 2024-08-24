@@ -1,8 +1,8 @@
 import { createRoot } from "react-dom/client";
-import React, { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Floor } from "../components/three/Floor";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Torus } from "@react-three/drei";
 import { Knife } from "../components/three/Knife";
 import * as THREE from "three";
 import io, { Socket as SocketClient } from "socket.io-client";
@@ -11,6 +11,19 @@ import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 import { css } from "@emotion/react";
 import { EnableCamera } from "../components/ui/EnableCamera";
 import { QRCodeBox } from "../components/ui/QRCode";
+import { Target } from "../components/three/Target";
+import { Box } from "../components/ui/Box";
+import { Button } from "../components/ui/Button";
+import {
+  CuboidCollider,
+  euler,
+  Physics,
+  quat,
+  RapierRigidBody,
+  RigidBody,
+  vec3,
+} from "@react-three/rapier";
+import { TargetList } from "../components/three/TargetList";
 
 const socket = io(SOCKET_IO_URL, {
   query: { token: "a" },
@@ -31,11 +44,16 @@ export function Scene() {
 
   const [rotation, setRotation] = useState(new THREE.Euler(0, 0, 0));
   const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
+  const [cameraPosition, setCameraPosition] = useState(
+    new THREE.Vector3(0, 1, 1)
+  );
 
   const [otherRotation, setOtherRotation] = useState(new THREE.Euler(0, 0, 0));
   const [otherPosition, setOtherPosition] = useState(
     new THREE.Vector3(0, 1, 2)
   );
+
+  const rigidBody = useRef<RapierRigidBody>(null);
 
   const [lastVideoTime, setLastVideoTime] = useState(-1);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -96,18 +114,30 @@ export function Scene() {
       }
     });
 
-    socket.on("rcvData", async (targetId, targetPosition) => {
-      if (targetId != userId) {
-        setOtherPosition(
-          new THREE.Vector3(
-            targetPosition[0],
-            targetPosition[1],
-            targetPosition[2]
-          )
-        );
-        console.log(targetId, targetPosition);
-      }
-    });
+    // socket.on("rcvData", async (targetId, targetPosition) => {
+    //   if (targetId != userId) {
+    //     setOtherPosition(
+    //       new THREE.Vector3(
+    //         targetPosition[0],
+    //         targetPosition[1],
+    //         targetPosition[2]
+    //       )
+    //     );
+    //     console.log(targetId, targetPosition);
+    //   }
+    // });
+
+    // socket.on("rcvDataRotation", async (targetId, targetRotation) => {
+    //   if (targetId != userId) {
+    //     setOtherRotation(
+    //       new THREE.Euler(
+    //         targetRotation[0],
+    //         targetRotation[1],
+    //         targetRotation[2]
+    //       )
+    //     );
+    //   }
+    // });
   };
 
   const handleResetUser = () => {
@@ -180,7 +210,7 @@ export function Scene() {
         const detections = handLandmarker.detectForVideo(video, startTimeMs);
         const x = detections.landmarks[0][0].x;
         const y = detections.landmarks[0][0].y;
-        const z = detections.landmarks[0][0].z;
+        const z = detections.landmarks[0][0].z * 3;
 
         const fx = -x * 2;
         const fy = 2 + (-y - 0.5);
@@ -189,6 +219,18 @@ export function Scene() {
         socket.emit("data", userId, [fx, fy, fz]);
 
         setPosition(new THREE.Vector3(fx, fy, fz));
+        setCameraPosition(
+          new THREE.Vector3(fx - (0.2 + fx / 6), fy + (0.2 + fy / 10), fz + 1)
+        );
+
+        // const position = vec3({
+        //   x: fx,
+        //   y: fy,
+        //   z: fz,
+        // });
+
+        // rigidBody.current.setTranslation(position, true);
+        // rigidBody.current.setRotation(quaternion, true);
       } catch (error) {}
     }
   };
@@ -200,6 +242,12 @@ export function Scene() {
 
   useEffect(() => {
     try {
+      socket.emit("dataRotation", userId, [
+        acceleration.beta + Math.PI / 2,
+        -acceleration.gamma,
+        -acceleration.alpha,
+      ]);
+
       setRotation(
         new THREE.Euler(
           acceleration.beta + Math.PI / 2,
@@ -225,11 +273,39 @@ export function Scene() {
       ></video>
       {isCameraOpen == false && (
         <EnableCamera>
-          <QRCodeBox
-            text={`https://front:5173/mobile?id=${userId}`}
-          ></QRCodeBox>
+          <div
+            css={css({
+              display: "flex",
+              flexDirection: "row",
+              gap: "1.5rem",
+            })}
+          >
+            <Box>
+              <QRCodeBox
+                text={`https://front:5173/mobile?id=${userId}`}
+              ></QRCodeBox>
+              <OptionTitle>핸드폰으로 QR코드를 인식해주세요</OptionTitle>
+            </Box>
 
-          <button onClick={startNewCamera}>카메라</button>
+            <Box>
+              <OptionTitle>카메라 권한을 활성화해 주세요.</OptionTitle>
+              <button onClick={startNewCamera}>카메라</button>
+            </Box>
+
+            <Box>
+              <OptionTitle>
+                핸드폰 화면이 정면을 보도록 위치시켜주세요
+              </OptionTitle>
+            </Box>
+          </div>
+
+          <div
+            css={css({
+              marginTop: "3rem",
+            })}
+          >
+            <Button>준비완료</Button>
+          </div>
         </EnableCamera>
       )}
 
@@ -246,42 +322,82 @@ export function Scene() {
       </button>
 
       <Canvas>
-        <OrbitControls makeDefault />
         <color attach="background" args={["#ffffff"]} />
+        {/* <Camera position={cameraPosition} /> */}
 
-        <directionalLight
-          castShadow
-          position={[0, 10, 0]}
-          intensity={4}
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-          shadow-camera-far={50}
-          shadow-camera-left={-100}
-          shadow-camera-right={100}
-          shadow-camera-top={100}
-          shadow-camera-bottom={-100}
-        />
+        <OrbitControls />
 
-        <ambientLight intensity={Math.PI / 2} />
-        <spotLight
-          position={[10, 10, 10]}
-          angle={0.15}
-          penumbra={1}
-          decay={0}
-          intensity={Math.PI}
-        />
-        <Floor />
+        <Suspense>
+          <Physics debug>
+            <CuboidCollider position={[0, -1, 0]} args={[20, 1, 20]} />
 
-        {otherUserId != 0 && (
+            <directionalLight
+              castShadow
+              position={[0, 10, 0]}
+              intensity={4}
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+              shadow-camera-far={50}
+              shadow-camera-left={-100}
+              shadow-camera-right={100}
+              shadow-camera-top={100}
+              shadow-camera-bottom={-100}
+            />
+
+            <ambientLight intensity={Math.PI / 2} />
+            <spotLight
+              position={[10, 10, 10]}
+              angle={0.15}
+              penumbra={1}
+              decay={0}
+              intensity={Math.PI}
+            />
+            <TargetList />
+
+            <Floor />
+
+            {/* {otherUserId != 0 && (
           <Knife
             ref={knifeRef}
             position={otherPosition}
             rotation={otherRotation}
           />
-        )}
+        )} */}
 
-        <Knife ref={knifeRef} position={position} rotation={rotation} />
+            <RigidBody
+              type="kinematicPosition"
+              ref={rigidBody}
+              colliders={"cuboid"}
+              position={position}
+              rotation={rotation}
+            >
+              <Knife ref={knifeRef} />
+              {/* rotation={rotation}  */}
+            </RigidBody>
+          </Physics>
+        </Suspense>
       </Canvas>
     </>
   );
 }
+
+const Camera = (props) => {
+  const ref: any = useRef();
+  const set = useThree((state) => state.set);
+  useEffect(() => void set({ camera: ref.current }), []);
+  useFrame(() => ref.current.updateMatrixWorld());
+  return <perspectiveCamera ref={ref} {...props} />;
+};
+
+const OptionTitle = ({ children }: any) => {
+  return (
+    <p
+      css={css({
+        color: "#fff",
+        textAlign: "center",
+      })}
+    >
+      {children}
+    </p>
+  );
+};

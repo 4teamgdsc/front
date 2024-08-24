@@ -1,19 +1,17 @@
 import { css } from "@emotion/react";
 
-export function EnableCamera({ children }: any) {
+export function Box({ children }: any) {
   return (
     <div
       css={css({
-        position: "absolute",
-        width: "100%",
-        height: "100%",
+        padding: "1rem",
+        borderRadius: "2rem",
         justifyContent: "center",
-        alignItems: "center",
         display: "flex",
+        backgroundColor: "#F7F7F729",
         flexDirection: "column",
-
-        backgroundColor: "#242424",
-        zIndex: 10000,
+        alignItems: "center",
+        width: "200px",
       })}
     >
       {children}
