@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useLoader } from "@react-three/fiber";
 import { GLTF, GLTFLoader } from "three-stdlib";
-import { Clone } from "@react-three/drei";
+import { Clone, PositionalAudio } from "@react-three/drei";
 import { useBackgroundStore } from "../../store/backgroundColor";
 import { useKcalStore } from "../../store/kcal";
 
@@ -16,6 +16,7 @@ export function TargetList() {
   const backgroundStore = useBackgroundStore();
   const [isFixed, setIsFixed] = useState(false);
   const kcalStore = useKcalStore();
+  const audioRef: any = useRef();
 
   useEffect(() => {
     let tempList = [];
@@ -31,6 +32,13 @@ export function TargetList() {
 
   return (
     <>
+      {/* <PositionalAudio
+        ref={audioRef}
+        autoplay
+        loop={false}
+        url="/sound/hit.mp3"
+        distance={30}
+      /> */}
       <group dispose={null}>
         {list.map((item, index) => (
           <RigidBody
@@ -38,6 +46,26 @@ export function TargetList() {
             colliders={"cuboid"}
             restitution={0.98}
             mass={40}
+            onCollisionEnter={({ manifold, target, other }) => {
+              console.log(
+                "Collision at world position ",
+                manifold.solverContactPoint(0)
+              );
+
+              if (other.rigidBodyObject) {
+                // audioRef.current.play();
+                // setTimeout(() => {
+                //   audioRef.current.pause();
+                // }, 500);
+                console.log(
+                  // this rigid body's Object3D
+                  target.rigidBodyObject.name,
+                  " collided with ",
+                  // the other rigid body's Object3D
+                  other.rigidBodyObject.name
+                );
+              }
+            }}
             onContactForce={(payload) => {
               if (payload.totalForce.y > 15) {
                 backgroundStore.changeColor("#f5e9e9");

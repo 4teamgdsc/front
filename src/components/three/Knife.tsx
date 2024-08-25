@@ -6,7 +6,7 @@ import { GLTF, GLTFLoader } from "three-stdlib";
 export function Knife(props: ThreeElements["mesh"]) {
   const gltf = useLoader(GLTFLoader, "/model/Katana_export.glb");
   return (
-    <mesh {...props}>
+    <mesh {...props} name="KF">
       <primitive
         visible
         rotation={new THREE.Euler(0, Math.PI, 0)}

@@ -32,6 +32,8 @@ import { Toggle } from "../components/ui/Toggle";
 import { Logo } from "../components/ui/Logo";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Glitch, LensFlare, Noise } from "@react-three/postprocessing";
+import { BlendFunction, GlitchMode } from "postprocessing";
 
 const bounce = keyframes`
 0% {
@@ -223,8 +225,6 @@ export function Scene() {
     document.documentElement.requestFullscreen();
   };
 
-  useEffect(() => {}, [topCameraPosition]);
-
   const initCam = async () => {
     const filesetResolver = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
@@ -410,7 +410,7 @@ export function Scene() {
 
       <Logo />
 
-      <button
+      {/* <button
         css={css({
           position: "absolute",
           top: 0,
@@ -420,7 +420,7 @@ export function Scene() {
         onClick={handleResetUser}
       >
         reset
-      </button>
+      </button> */}
 
       <Canvas>
         <color attach="background" args={[backgroundStore.color]} />
