@@ -7,6 +7,7 @@ import { useLoader } from "@react-three/fiber";
 import { GLTF, GLTFLoader } from "three-stdlib";
 import { Clone } from "@react-three/drei";
 import { useBackgroundStore } from "../../store/backgroundColor";
+import { useKcalStore } from "../../store/kcal";
 
 export function TargetList() {
   const [list, setList] = useState([]);
@@ -14,6 +15,7 @@ export function TargetList() {
   //   const copiedScene = useMemo(() => scene.clone(), [scene]);
   const backgroundStore = useBackgroundStore();
   const [isFixed, setIsFixed] = useState(false);
+  const kcalStore = useKcalStore();
 
   useEffect(() => {
     let tempList = [];
@@ -37,9 +39,10 @@ export function TargetList() {
             restitution={0.98}
             mass={40}
             onContactForce={(payload) => {
-              if (payload.totalForce.y > 10) {
+              if (payload.totalForce.y > 15) {
                 backgroundStore.changeColor("#f5e9e9");
                 if (isFixed == false) {
+                  kcalStore.addKcal(0.05);
                   setTimeout(() => {
                     setIsFixed(false);
                   }, 800);

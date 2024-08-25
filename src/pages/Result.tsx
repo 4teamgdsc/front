@@ -4,9 +4,11 @@ import { LargeBox } from "../components/ui/Box";
 import { Button } from "../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "../components/ui/Logo";
+import { useKcalStore } from "../store/kcal";
 
 export function ResultPage() {
   const navigate = useNavigate();
+  const kcalStore = useKcalStore();
 
   const handleClick = () => {
     location.href = "/scene";
@@ -30,8 +32,8 @@ export function ResultPage() {
       <OptionTitle>두구두구.. 오뚜기님의 타율은..?</OptionTitle>
 
       <LargeBox>
-        <Item keyn={"현재"} value={"82%"} />
-        <Item keyn={"소모한 칼로리"} value={"3kcal"} />
+        <Item keyn={"현재"} value={"84%"} />
+        <Item keyn={"소모한 칼로리"} value={`${kcalStore.kcal}kcal`} />
         <Item keyn={"획득한 코인"} value={"20c"} />
       </LargeBox>
 
